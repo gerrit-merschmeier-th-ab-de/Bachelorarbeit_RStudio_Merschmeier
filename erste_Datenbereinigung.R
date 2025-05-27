@@ -5,25 +5,36 @@
 # Datum: 12.05.2025
 # ============================================
 
-# Laden der Pakete
+# Pakete laden
 #install.packages("readxl") # nur beim ersten Mal notwendig
 library(readxl)
+library(stringr)
+library(dplyr)
 
-# Einlesen der Daten
+# eigene Funktion laden
+source("create_specializedDF_function.R")
+
+# Daten einlesen
 df <- read_xlsx("Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
 
 # Überblick verschaffen
 summary(df)
 head(df)
 
-# Auswählen von relevanten Spalten             (Fehler in "Modaltiät")
-data_relevant <- df[, c("Änderungszeitstempel", "Datum", "ErstelltVon", "LfdNr", "Fall_ID",
-                        "Fall_Foto_ID_foreignKey", "Modaltiät", "Gerät", "Körperregion", "Anmeldung AX Dauer",
-                        "Anmeldung AX Start", "Anmeldung AX Stop", "Anmeldung Dauer", "Anmeldung Kommentar", "Ceckin Start",
-                        "Checkin Dauer", "Checkin Stop", "Fallakte Dauer", "Fallakte Start", "Fallakte Stop", 
-                        "Kontakt Anzahl Anmeldung", "Kontakt Anzahl Summe", "Primärschlüssel", "Prüfverfahren", "Prüfverfahren global", 
-                        "TR_Index", "GeändertVon"
-                        )]
+# Alle Spaltennamen mit >=1 aufeinanderfolgenden Leerzeichen mit einem Unterstrich ersetzen 
+names(df) <- str_replace_all(names(df), "\\s+", "_")
+
+# Vereinheitlichen von Faktorvariablen
+df$ErstelltVon <- tolower(df$ErstelltVon)
+df$GeändertVon <- tolower(df$GeändertVon)
+
+# Aufruf der Funktion, um die Dataframes für Anmeldung, Befundung und Klinik zu erstellen
+list_of_dfs <- create_specialized_dfs(df)
+
+# Zugreifen auf die einzelnen Dataframes
+Anmeldung_df <- list_of_dfs$Anmeldung
+Befundung_df <- list_of_dfs$Befundung
+Klinik_df <- list_of_dfs$Klinik
 
 # Stoppuhr-Spalten 
 zeitvars <- c("Anmeldung AX Dauer", "Anmeldung AX Start", "Anmeldung AX Stop","Anmeldung Dauer",
@@ -36,67 +47,55 @@ factorvars <- c("ErstelltVon", "Modaltiät", "Gerät", "Körperregion",
 
 # Umwandeln von Variablen in Faktor um später besser damit arbeiten zu können (Korrekte Analyse, Richtige Visualisierung)
 for (var in factorvars) {
-  data_relevant[[var]] <- as.factor(data_relevant[[var]])
+  Anmeldung_df[[var]] <- as.factor(Anmeldung_df[[var]])
 }
 
-# Vereinheitlichen von Faktorvariablen
-data_relevant$ErstelltVon <- tolower(data_relevant$ErstelltVon)
-data_relevant$GeändertVon <- tolower(data_relevant$GeändertVon)
-
-# Alle Spaltennamen mit Leerzeichen in Unterstriche umwandeln
-colnames(data_relevant) <- gsub(" ", "_", colnames(data_relevant))
 
 ##### Kann eigentlich weg #####
 ###  Unausagekräftige Plots
-hist(dauer_sec,
-     main = "Verteilung der Anmeldedauer",
-     xlab = "Dauer in Sekunden",
-     col = "skyblue")
 
 # Boxplot nach Prüfverfahren
-boxplot(`Anmeldung AX Dauer` ~ Prüfverfahren,
-        data = data_relevant,
+boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren,
+        data = Anmeldung_df,
         main = "Anmeldedauer nach Prüfverfahren",
         xlab = "Prüfverfahren",
         ylab = "Dauer in Sekunden",
         col = "lightgreen")
 
 # Zusammenhang Anmeldedauer und Kontaktanzahl
-plot(data_relevant$`Kontakt Anzahl Anmeldung`,
-     data_relevant$`Anmeldung AX Dauer`,
+plot(Anmeldung_df$Kontakt_Anzahl_Anmeldung,
+     Anmeldung_df$Anmeldung_AX_Dauer,
      main = "Zusammenhang Kontaktanzahl und Dauer",
      xlab = "Anzahl Kontakte",
      ylab = "Anmeldedauer (Sekunden)",
      pch = 19, col = "steelblue")
 
-# als nächstes vielleicht die rohdaten nehmen und so splitten wie sie in der ipad-app sind -> anmeldung, klinik, befundung... 
 
-summary(data_relevant$Anmeldung_AX_Dauer)
-summary(data_relevant$Checkin_Dauer)
-summary(data_relevant$Fallakte_Dauer)
-summary(data_relevant$Kontakt_Anzahl_Anmeldung)
+summary(Anmeldung_df$Anmeldung_AX_Dauer)
+summary(Anmeldung_df$Checkin_Dauer)
+summary(Anmeldung_df$Fallakte_Dauer)
+summary(Anmeldung_df$Kontakt_Anzahl_Anmeldung)
 
 # Mittelwert pro Prüfverfahren
-aggregate(Anmeldung_AX_Dauer ~ Prüfverfahren, data = data_relevant, FUN = mean, na.rm = TRUE)
-aggregate(Checkin_Dauer ~ Prüfverfahren, data = data_relevant, FUN = mean, na.rm = TRUE)
+aggregate(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
+aggregate(Checkin_Dauer ~ Prüfverfahren, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
 
 # Kontaktanzahl nach Prüfverfahren
-aggregate(Kontakt_Anzahl_Anmeldung ~ Prüfverfahren, data = data_relevant, FUN = mean, na.rm = TRUE)
+aggregate(Kontakt_Anzahl_Anmeldung ~ Prüfverfahren, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
 
 # Histogramme
-hist(data_relevant$Anmeldung_AX_Dauer, main = "Anmeldedauer", xlab = "Sekunden", col = "lightblue", breaks = 'secs')
+hist(Anmeldung_df$Anmeldung_AX_Dauer, main = "Anmeldedauer", xlab = "Sekunden", col = "lightblue", breaks = 'secs')
 
 # Boxplots nach Prüfverfahren
-boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren, data = data_relevant,
+boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df,
         main = "Anmeldedauer nach Prüfverfahren",
         ylab = "Dauer in Sekunden", col = "lightgreen")
 
 # Mittlere Dauer je Modalität
-aggregate(Anmeldung_AX_Dauer ~ Modaltiät, data = data_relevant, FUN = mean, na.rm = TRUE)
+aggregate(Anmeldung_AX_Dauer ~ Modaltiät, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
 
-library(dplyr)
 
-statistics_Anmeldung_Dauer <- data_relevant %>%
+statistics_Anmeldung_Dauer <- Anmeldung_df %>%
   group_by(Prüfverfahren) %>%
   summarise(
     n = n(),
@@ -111,23 +110,18 @@ statistics_Anmeldung_Dauer <- data_relevant %>%
 ###### Statistische Tests mit P-Wert (Signifikanz usw.) #####
 
 # ANOVA zur Prüfverfahren-Wirkung
-aov_result <- aov(Anmeldung_AX_Dauer ~ Prüfverfahren, data = data_relevant)
+aov_result <- aov(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df)
 summary(aov_result)
 
 # Zusammenhang prüfen: Dauer vs. Kontaktanzahl
 cor.test(as.numeric(
-  difftime(data_relevant$Anmeldung_AX_Stop, data_relevant$Anmeldung_AX_Start, units = "secs")
-), data_relevant$Kontakt_Anzahl_Anmeldung, use = "complete.obs")
+  difftime(Anmeldung_df$Anmeldung_AX_Stop, Anmeldung_df$Anmeldung_AX_Start, units = "secs")
+), Anmeldung_df$Kontakt_Anzahl_Anmeldung, use = "complete.obs")
 
-plot(data_relevant$Kontakt_Anzahl_Anmeldung,
-     data_relevant$Anmeldung_AX_Dauer,
+plot(Anmeldung_df$Kontakt_Anzahl_Anmeldung,
+     Anmeldung_df$Anmeldung_AX_Dauer,
      main = "Zusammenhang Kontakte und Anmeldedauer",
      xlab = "Anzahl Kontakte",
-     ylab = "Dauer in Sekunden", pch = 19, col = "darkred")
-abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = data_relevant), col = "blue")
+     ylab = "Dauer in Sekunden", pch = 19, col = "purple")
+abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = Anmeldung_df), col = "orange", lwd=2)
 
-# Regressionsmodell zum Einfluss mehrerer Faktoren
-modell <- lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung + Modaltiät + Gerät + Körperregion + Prüfverfahren, data = data_relevant)
-summary(modell)
-
-######## als letztes funktion für die erstellung von den spez. DFs gemacht. Jetzt hier eingliedern

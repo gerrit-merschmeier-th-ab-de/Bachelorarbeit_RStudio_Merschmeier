@@ -1,14 +1,3 @@
-# Laden der Pakete
-library(readxl)
-
-# Einlesen der Daten
-df <- read_xlsx("Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
-
-# Alle Spaltennamen mit >=1 aufeinanderfolgenden Leerzeichen mit einem Unterstrich ersetzen 
-library(stringr)
-names(df) <- str_replace_all(names(df), "\\s+", "_")
-
-
 # Definition der Funktion
 create_specialized_dfs <- function(original_df) {
   
@@ -92,13 +81,3 @@ create_specialized_dfs <- function(original_df) {
     Klinik = Klinik
   ))
 }
-
-
-
-# Aufruf der Funktion, um die Dataframes für Anmeldung, Befundung und Klinik zu erstellen
-list_of_dfs <- create_specialized_dfs(df)
-
-# Zugreifen auf die einzelnen Dataframes
-Anmeldung_df <- list_of_dfs$Anmeldung
-Befundung_df <- list_of_dfs$Befundung
-Klinik_df <- list_of_dfs$Klinik
