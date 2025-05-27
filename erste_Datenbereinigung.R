@@ -21,7 +21,7 @@ df <- read_xlsx("Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
 summary(df)
 head(df)
 
-# Alle Spaltennamen mit >=1 aufeinanderfolgenden Leerzeichen mit einem Unterstrich ersetzen 
+# Spaltennamen die >=1 aufeinanderfolgende Leerzeichen enthalten mit einem Unterstrich ersetzen 
 names(df) <- str_replace_all(names(df), "\\s+", "_")
 
 # Vereinheitlichen von Faktorvariablen
@@ -125,3 +125,7 @@ plot(Anmeldung_df$Kontakt_Anzahl_Anmeldung,
      ylab = "Dauer in Sekunden", pch = 19, col = "purple")
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = Anmeldung_df), col = "orange", lwd=2)
 
+
+## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
+## außerdem sind nicht alle spalten aus df genutzt bzw. in Anmeldung, Befundung und Klinik drin
+## Vernünftig anlegen welche spalte in welchem df nötig ist! -> mit excel + Screenshot der App und dann rausschreiben 
