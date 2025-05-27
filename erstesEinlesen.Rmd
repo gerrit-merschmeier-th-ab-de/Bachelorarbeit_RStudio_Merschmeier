@@ -1,0 +1,35 @@
+---
+title: "Bachelorarbeit"
+author: "Gerrit M."
+date: "2025-05-09"
+output: 
+  pdf_document: default
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+## Laden der Pakete
+```{r}
+library(readxl)
+```
+
+## Einlesen der Datei
+```{r}
+data <- read_excel("C:/TH AB/8.Semester/Bachelorarbeit/Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
+  
+```
+
+## Überblick über die Daten
+```{r}
+# Überblick über die ersten Zeilen
+head(data)
+
+# Zusammenfassung aller Variablen
+summary(data)
+```
