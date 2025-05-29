@@ -6,7 +6,6 @@
 # ============================================
 
 # Pakete laden
-#install.packages("readxl") # nur beim ersten Mal notwendig
 library(readxl)
 library(stringr)
 library(dplyr)
@@ -24,6 +23,10 @@ head(df)
 # Spaltennamen die >=1 aufeinanderfolgende Leerzeichen enthalten mit einem Unterstrich ersetzen 
 names(df) <- str_replace_all(names(df), "\\s+", "_")
 
+# Rechtschreibfehler in Spaltennamen korrigieren
+colnames(df)[which(names(df) == "Ceckin_Start")] <- "Checkin_Start"
+colnames(df)[which(names(df) == "Modaltiät")] <- "Modalität"
+
 # Vereinheitlichen von Faktorvariablen
 df$ErstelltVon <- tolower(df$ErstelltVon)
 df$GeändertVon <- tolower(df$GeändertVon)
@@ -38,11 +41,11 @@ Klinik_df <- list_of_dfs$Klinik
 
 # Stoppuhr-Spalten 
 zeitvars <- c("Anmeldung AX Dauer", "Anmeldung AX Start", "Anmeldung AX Stop","Anmeldung Dauer",
-              "Ceckin Start", "Checkin Dauer", "Checkin Stop",
+              "Checkin Start", "Checkin Dauer", "Checkin Stop",
               "Fallakte Dauer", "Fallakte Start", "Fallakte Stop")
 
 # Faktor-Spalten
-factorvars <- c("ErstelltVon", "Modaltiät", "Gerät", "Körperregion",
+factorvars <- c("ErstelltVon", "Modalität", "Gerät", "Körperregion",
                 "Prüfverfahren", "Prüfverfahren global", "GeändertVon")
 
 # Umwandeln von Variablen in Faktor um später besser damit arbeiten zu können (Korrekte Analyse, Richtige Visualisierung)
@@ -92,7 +95,7 @@ boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df,
         ylab = "Dauer in Sekunden", col = "lightgreen")
 
 # Mittlere Dauer je Modalität
-aggregate(Anmeldung_AX_Dauer ~ Modaltiät, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
+aggregate(Anmeldung_AX_Dauer ~ Modalität, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
 
 
 statistics_Anmeldung_Dauer <- Anmeldung_df %>%
@@ -125,7 +128,5 @@ plot(Anmeldung_df$Kontakt_Anzahl_Anmeldung,
      ylab = "Dauer in Sekunden", pch = 19, col = "purple")
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = Anmeldung_df), col = "orange", lwd=2)
 
-
+## eventuell noch umlaute entfernen
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
-## außerdem sind nicht alle spalten aus df genutzt bzw. in Anmeldung, Befundung und Klinik drin
-## Vernünftig anlegen welche spalte in welchem df nötig ist! -> mit excel + Screenshot der App und dann rausschreiben 
