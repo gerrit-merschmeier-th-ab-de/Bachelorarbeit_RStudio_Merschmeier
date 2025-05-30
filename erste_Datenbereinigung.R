@@ -2,7 +2,7 @@
 # R-Skript: Datenbereinigung Bachelorarbeit
 # Ziel: Import, Bereinigung und Vorbereitung der Excel-Daten
 # Autor: Name
-# Datum: 12.05.2025
+# Datum: 30.05.2025
 # ============================================
 
 # Pakete laden
@@ -35,70 +35,55 @@ df$GeändertVon <- tolower(df$GeändertVon)
 list_of_dfs <- create_specialized_dfs(df)
 
 # Zugreifen auf die einzelnen Dataframes
-Anmeldung_df <- list_of_dfs$Anmeldung
-Befundung_df <- list_of_dfs$Befundung
-Klinik_df <- list_of_dfs$Klinik
-
-# Stoppuhr-Spalten 
-zeitvars <- c("Anmeldung AX Dauer", "Anmeldung AX Start", "Anmeldung AX Stop","Anmeldung Dauer",
-              "Checkin Start", "Checkin Dauer", "Checkin Stop",
-              "Fallakte Dauer", "Fallakte Start", "Fallakte Stop")
-
-# Faktor-Spalten
-factorvars <- c("ErstelltVon", "Modalität", "Gerät", "Körperregion",
-                "Prüfverfahren", "Prüfverfahren global", "GeändertVon")
-
-# Umwandeln von Variablen in Faktor um später besser damit arbeiten zu können (Korrekte Analyse, Richtige Visualisierung)
-for (var in factorvars) {
-  Anmeldung_df[[var]] <- as.factor(Anmeldung_df[[var]])
-}
-
+anmeldung <- list_of_dfs$Anmeldung
+befundung <- list_of_dfs$Befundung
+klinik <- list_of_dfs$Klinik
 
 ##### Kann eigentlich weg #####
 ###  Unausagekräftige Plots
 
 # Boxplot nach Prüfverfahren
 boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren,
-        data = Anmeldung_df,
+        data = anmeldung,
         main = "Anmeldedauer nach Prüfverfahren",
         xlab = "Prüfverfahren",
         ylab = "Dauer in Sekunden",
         col = "lightgreen")
 
 # Zusammenhang Anmeldedauer und Kontaktanzahl
-plot(Anmeldung_df$Kontakt_Anzahl_Anmeldung,
-     Anmeldung_df$Anmeldung_AX_Dauer,
+plot(anmeldung$Kontakt_Anzahl_Anmeldung,
+     anmeldung$Anmeldung_AX_Dauer,
      main = "Zusammenhang Kontaktanzahl und Dauer",
      xlab = "Anzahl Kontakte",
      ylab = "Anmeldedauer (Sekunden)",
      pch = 19, col = "steelblue")
 
 
-summary(Anmeldung_df$Anmeldung_AX_Dauer)
-summary(Anmeldung_df$Checkin_Dauer)
-summary(Anmeldung_df$Fallakte_Dauer)
-summary(Anmeldung_df$Kontakt_Anzahl_Anmeldung)
+summary(anmeldung$Anmeldung_AX_Dauer)
+summary(anmeldung$Checkin_Dauer)
+summary(anmeldung$Fallakte_Dauer)
+summary(anmeldung$Kontakt_Anzahl_Anmeldung)
 
 # Mittelwert pro Prüfverfahren
-aggregate(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
-aggregate(Checkin_Dauer ~ Prüfverfahren, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
+aggregate(Anmeldung_AX_Dauer ~ Prüfverfahren, data = anmeldung, FUN = mean, na.rm = TRUE)
+aggregate(Checkin_Dauer ~ Prüfverfahren, data = anmeldung, FUN = mean, na.rm = TRUE)
 
 # Kontaktanzahl nach Prüfverfahren
-aggregate(Kontakt_Anzahl_Anmeldung ~ Prüfverfahren, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
+aggregate(Kontakt_Anzahl_Anmeldung ~ Prüfverfahren, data = anmeldung, FUN = mean, na.rm = TRUE)
 
 # Histogramme
-hist(Anmeldung_df$Anmeldung_AX_Dauer, main = "Anmeldedauer", xlab = "Sekunden", col = "lightblue", breaks = 'secs')
+hist(anmeldung$Anmeldung_AX_Dauer, main = "Anmeldedauer", xlab = "Sekunden", col = "lightblue", breaks = 'secs')
 
 # Boxplots nach Prüfverfahren
-boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df,
+boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren, data = anmeldung,
         main = "Anmeldedauer nach Prüfverfahren",
         ylab = "Dauer in Sekunden", col = "lightgreen")
 
 # Mittlere Dauer je Modalität
-aggregate(Anmeldung_AX_Dauer ~ Modalität, data = Anmeldung_df, FUN = mean, na.rm = TRUE)
+aggregate(Anmeldung_AX_Dauer ~ Modalität, data = anmeldung, FUN = mean, na.rm = TRUE)
 
 
-statistics_Anmeldung_Dauer <- Anmeldung_df %>%
+statistics_Anmeldung_Dauer <- anmeldung %>%
   group_by(Prüfverfahren) %>%
   summarise(
     n = n(),
@@ -113,20 +98,19 @@ statistics_Anmeldung_Dauer <- Anmeldung_df %>%
 ###### Statistische Tests mit P-Wert (Signifikanz usw.) #####
 
 # ANOVA zur Prüfverfahren-Wirkung
-aov_result <- aov(Anmeldung_AX_Dauer ~ Prüfverfahren, data = Anmeldung_df)
+aov_result <- aov(Anmeldung_AX_Dauer ~ Prüfverfahren, data = anmeldung)
 summary(aov_result)
 
 # Zusammenhang prüfen: Dauer vs. Kontaktanzahl
 cor.test(as.numeric(
-  difftime(Anmeldung_df$Anmeldung_AX_Stop, Anmeldung_df$Anmeldung_AX_Start, units = "secs")
-), Anmeldung_df$Kontakt_Anzahl_Anmeldung, use = "complete.obs")
+  difftime(anmeldung$Anmeldung_AX_Stop, anmeldung$Anmeldung_AX_Start, units = "secs")
+), anmeldung$Kontakt_Anzahl_Anmeldung, use = "complete.obs")
 
-plot(Anmeldung_df$Kontakt_Anzahl_Anmeldung,
-     Anmeldung_df$Anmeldung_AX_Dauer,
+plot(anmeldung$Kontakt_Anzahl_Anmeldung,
+     anmeldung$Anmeldung_AX_Dauer,
      main = "Zusammenhang Kontakte und Anmeldedauer",
      xlab = "Anzahl Kontakte",
      ylab = "Dauer in Sekunden", pch = 19, col = "purple")
-abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = Anmeldung_df), col = "orange", lwd=2)
+abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
-## eventuell noch umlaute entfernen
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
