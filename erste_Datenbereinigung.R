@@ -39,6 +39,41 @@ anmeldung <- list_of_dfs$Anmeldung
 befundung <- list_of_dfs$Befundung
 klinik <- list_of_dfs$Klinik
 
+
+# Deskriptive Statistik 
+
+# Mittelwert, Median, Standardabweichung, Varianz für alle numerischen Spalten
+df_descriptive_all_numeric <- df %>%
+  summarise(
+    across(where(is.numeric), # bspl.: ends_with("Dauer") oder c(Kontakt_Anzahl_Anmeldung, Kontakt_Anzahl_Arztgespräch)
+           list(
+             mean = ~mean(., na.rm = TRUE),
+             median = ~median(., na.rm = TRUE),
+             sd = ~sd(., na.rm = TRUE),
+             var = ~var(., na.rm = TRUE)
+           ),
+           .names = "{.col}_{.fn}"
+    )
+  )
+
+# Umwandeln in das Long-Format
+df_descriptive_long <- df_descriptive_all_numeric %>%
+  pivot_longer(
+    cols = everything(),
+    names_to = "variable_statistic",
+    values_to = "value"
+  ) %>%
+  # Zerlegen der Spalte "variable_statistic" in "variable" und "statistic"
+  mutate(
+    statistic = str_extract(variable_statistic, "(mean|median|sd|var)$"),
+    variable = str_remove(variable_statistic, "_(mean|median|sd|var)$")
+  ) %>%
+  # Auswählen und anordnen der Spalten
+  select(variable, statistic, value)
+print("Deskriptive Statistiken im Long-Format:")
+print(df_descriptive_long)
+
+
 ##### Kann eigentlich weg #####
 ###  Unausagekräftige Plots
 
@@ -52,7 +87,7 @@ boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren,
 
 # Zusammenhang Anmeldedauer und Kontaktanzahl
 plot(anmeldung$Kontakt_Anzahl_Anmeldung,
-     anmeldung$Anmeldung_AX_Dauer,
+     hms::as_hms(anmeldung$Anmeldung_AX_Dauer), # hms-Paket für Zeitkomponenten ohne Datum; evtl. Achsenskalierung ändern
      main = "Zusammenhang Kontaktanzahl und Dauer",
      xlab = "Anzahl Kontakte",
      ylab = "Anmeldedauer (Sekunden)",
@@ -114,3 +149,4 @@ plot(anmeldung$Kontakt_Anzahl_Anmeldung,
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
+## ich habe deskriptive statistik begonnen und pivot longer !da muss noch das dataframe geändert werden
