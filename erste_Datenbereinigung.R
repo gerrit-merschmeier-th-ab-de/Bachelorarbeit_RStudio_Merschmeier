@@ -34,6 +34,15 @@ colnames(df)[which(names(df) == "Modaltiät")] <- "Modalität"
 df$ErstelltVon <- tolower(df$ErstelltVon)
 df$GeändertVon <- tolower(df$GeändertVon)
 
+# Korrigieren der Spalte "Arztgespräch_Dauer"
+df <- df %>%
+  mutate(
+    Arztgespräch_Dauer_ORIGINAL_RAW = Arztgespräch_Dauer,
+    temp_numeric = as.numeric(Arztgespräch_Dauer),
+    Arztgespräch_Dauer = hms::as_hms(temp_numeric * 86400)
+  ) %>%
+  select(-temp_numeric)
+
 # Aufruf der Funktion, um die Dataframes für Anmeldung, Befundung und Klinik zu erstellen
 list_of_dfs <- create_specialized_dfs(df)
 
@@ -43,9 +52,9 @@ befundung <- list_of_dfs$Befundung
 klinik <- list_of_dfs$Klinik
 
 # Umwandeln der Dauer-Spalten in Sekunden
-anmeldung <- anmeldung %>%
+df <- df %>%
   mutate(
-    # Für jede Spalte, die auf "Dauer" endet und vom Typ POSIXct ist:
+    # Für jede Spalte, die auf "Dauer" endet:
     across(ends_with("Dauer"),
            # Berechne die Sekunden seit Mitternacht (00:00:00) für jeden Zeitpunkt
            ~ as.numeric(format(.x, "%H")) * 3600 +
