@@ -9,6 +9,7 @@
 library(readxl)
 library(stringr)
 library(dplyr)
+library(tidyr)
 
 # eigene Funktion laden
 source("create_specializedDF_function.R")
@@ -19,6 +20,8 @@ df <- read_xlsx("Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
 # Überblick verschaffen
 summary(df)
 head(df)
+
+### Data Cleaning
 
 # Spaltennamen die >=1 aufeinanderfolgende Leerzeichen enthalten mit einem Unterstrich ersetzen 
 names(df) <- str_replace_all(names(df), "\\s+", "_")
@@ -39,13 +42,25 @@ anmeldung <- list_of_dfs$Anmeldung
 befundung <- list_of_dfs$Befundung
 klinik <- list_of_dfs$Klinik
 
+# Umwandeln der Dauer-Spalten in Sekunden
+anmeldung <- anmeldung %>%
+  mutate(
+    # Für jede Spalte, die auf "Dauer" endet und vom Typ POSIXct ist:
+    across(ends_with("Dauer"),
+           # Berechne die Sekunden seit Mitternacht (00:00:00) für jeden Zeitpunkt
+           ~ as.numeric(format(.x, "%H")) * 3600 +
+             as.numeric(format(.x, "%M")) * 60 +
+             as.numeric(format(.x, "%S")),
+           .names = "{.col}_secs"
+    )
+  )
 
-# Deskriptive Statistik 
+#### Deskriptive Statistik 
 
 # Mittelwert, Median, Standardabweichung, Varianz für alle numerischen Spalten
-df_descriptive_all_numeric <- df %>%
+anmeldung_descriptive <- anmeldung %>%
   summarise(
-    across(where(is.numeric), # bspl.: ends_with("Dauer") oder c(Kontakt_Anzahl_Anmeldung, Kontakt_Anzahl_Arztgespräch)
+    across(ends_with("_secs"), # bspl.: where(is.numeric) oder c(Kontakt_Anzahl_Anmeldung, Kontakt_Anzahl_Arztgespräch)
            list(
              mean = ~mean(., na.rm = TRUE),
              median = ~median(., na.rm = TRUE),
@@ -57,7 +72,7 @@ df_descriptive_all_numeric <- df %>%
   )
 
 # Umwandeln in das Long-Format
-df_descriptive_long <- df_descriptive_all_numeric %>%
+anmeldung_descriptive_long <- anmeldung_descriptive %>%
   pivot_longer(
     cols = everything(),
     names_to = "variable_statistic",
@@ -71,7 +86,7 @@ df_descriptive_long <- df_descriptive_all_numeric %>%
   # Auswählen und anordnen der Spalten
   select(variable, statistic, value)
 print("Deskriptive Statistiken im Long-Format:")
-print(df_descriptive_long)
+print(anmeldung_descriptive_long)
 
 
 ##### Kann eigentlich weg #####
@@ -84,6 +99,7 @@ boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren,
         xlab = "Prüfverfahren",
         ylab = "Dauer in Sekunden",
         col = "lightgreen")
+
 
 # Zusammenhang Anmeldedauer und Kontaktanzahl
 plot(anmeldung$Kontakt_Anzahl_Anmeldung,
@@ -149,4 +165,3 @@ plot(anmeldung$Kontakt_Anzahl_Anmeldung,
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
-## ich habe deskriptive statistik begonnen und pivot longer !da muss noch das dataframe geändert werden
