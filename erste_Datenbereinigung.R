@@ -174,3 +174,4 @@ plot(anmeldung$Kontakt_Anzahl_Anmeldung,
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
+## Umwandeln der Dauer-Spalten funktioniert noch nicht, liegt am Format vonArztgespräch_Dauer
