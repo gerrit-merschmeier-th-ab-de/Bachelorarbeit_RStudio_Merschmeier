@@ -34,14 +34,11 @@ colnames(df)[which(names(df) == "Modaltiät")] <- "Modalität"
 df$ErstelltVon <- tolower(df$ErstelltVon)
 df$GeändertVon <- tolower(df$GeändertVon)
 
-# Korrigieren der Spalte "Arztgespräch_Dauer"
+# Umwandeln der Excel-Zeitbrüche in "Arztgespräch_Dauer" in Sekunden (1 Tag = 86400 Sekunden)
 df <- df %>%
   mutate(
-    Arztgespräch_Dauer_ORIGINAL_RAW = Arztgespräch_Dauer,
-    temp_numeric = as.numeric(Arztgespräch_Dauer),
-    Arztgespräch_Dauer = hms::as_hms(temp_numeric * 86400)
-  ) %>%
-  select(-temp_numeric)
+    Arztgespräch_Dauer_secs = as.numeric(Arztgespräch_Dauer) * 86400
+    )
 
 # Aufruf der Funktion, um die Dataframes für Anmeldung, Befundung und Klinik zu erstellen
 list_of_dfs <- create_specialized_dfs(df)
@@ -52,10 +49,10 @@ befundung <- list_of_dfs$Befundung
 klinik <- list_of_dfs$Klinik
 
 # Umwandeln der Dauer-Spalten in Sekunden
-df <- df %>%
+klinik <- klinik %>%
   mutate(
     # Für jede Spalte, die auf "Dauer" endet:
-    across(ends_with("Dauer"),
+    across(ends_with("Dauer") & !starts_with("Arztgespräch_Dauer"),
            # Berechne die Sekunden seit Mitternacht (00:00:00) für jeden Zeitpunkt
            ~ as.numeric(format(.x, "%H")) * 3600 +
              as.numeric(format(.x, "%M")) * 60 +
@@ -174,4 +171,3 @@ plot(anmeldung$Kontakt_Anzahl_Anmeldung,
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
-## Umwandeln der Dauer-Spalten funktioniert noch nicht, liegt am Format vonArztgespräch_Dauer
