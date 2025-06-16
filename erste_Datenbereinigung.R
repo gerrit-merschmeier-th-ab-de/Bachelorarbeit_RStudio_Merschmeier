@@ -11,8 +11,9 @@ library(stringr)
 library(dplyr)
 library(tidyr)
 
-# eigene Funktion laden
-source("create_specializedDF_function.R")
+# eigene Funktionen laden
+source("create_specialized_dfs_function.R")
+source("create_descriptive_summary_function.R")
 
 # Daten einlesen
 df <- read_xlsx("Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
@@ -40,16 +41,8 @@ df <- df %>%
     Arztgespräch_Dauer_secs = as.numeric(Arztgespräch_Dauer) * 86400
     )
 
-# Aufruf der Funktion, um die Dataframes für Anmeldung, Befundung und Klinik zu erstellen
-list_of_dfs <- create_specialized_dfs(df)
-
-# Zugreifen auf die einzelnen Dataframes
-anmeldung <- list_of_dfs$Anmeldung
-befundung <- list_of_dfs$Befundung
-klinik <- list_of_dfs$Klinik
-
 # Umwandeln der Dauer-Spalten in Sekunden
-klinik <- klinik %>%
+df <- df %>%
   mutate(
     # Für jede Spalte, die auf "Dauer" endet:
     across(ends_with("Dauer") & !starts_with("Arztgespräch_Dauer"),
@@ -60,6 +53,14 @@ klinik <- klinik %>%
            .names = "{.col}_secs"
     )
   )
+
+# Aufruf der Funktion, um die Dataframes für Anmeldung, Befundung und Klinik zu erstellen
+list_of_dfs <- create_specialized_dfs(df)
+
+# Zugreifen auf die einzelnen Dataframes
+anmeldung <- list_of_dfs$Anmeldung
+befundung <- list_of_dfs$Befundung
+klinik <- list_of_dfs$Klinik
 
 #### Deskriptive Statistik 
 
@@ -84,7 +85,7 @@ anmeldung_descriptive_long <- anmeldung_descriptive %>%
     names_to = "variable_statistic",
     values_to = "value"
   ) %>%
-  # Zerlegen der Spalte "variable_statistic" in "variable" und "statistic"
+  # Zerlegen der Spalte "variable_statistic" in "statistic" und "variable"
   mutate(
     statistic = str_extract(variable_statistic, "(mean|median|sd|var)$"),
     variable = str_remove(variable_statistic, "_(mean|median|sd|var)$")
@@ -94,6 +95,10 @@ anmeldung_descriptive_long <- anmeldung_descriptive %>%
 print("Deskriptive Statistiken im Long-Format:")
 print(anmeldung_descriptive_long)
 
+# Deskriptive Tabellen erzeugen
+anmeldung_descriptive <- create_descriptive_summary(anmeldung)
+befundung_descriptive <- create_descriptive_summary(befundung)
+klinik_descriptive <- create_descriptive_summary(klinik)
 
 ##### Kann eigentlich weg #####
 ###  Unausagekräftige Plots
@@ -171,3 +176,4 @@ plot(anmeldung$Kontakt_Anzahl_Anmeldung,
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
+## die neue funktion ist noch nicht funktionsfähig
