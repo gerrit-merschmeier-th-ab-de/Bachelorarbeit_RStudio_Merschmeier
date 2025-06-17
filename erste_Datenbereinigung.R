@@ -71,6 +71,81 @@ anmeldung_descriptive <- create_descriptive_summary(anmeldung)
 befundung_descriptive <- create_descriptive_summary(befundung)
 klinik_descriptive <- create_descriptive_summary(klinik)
 
+### NEUES BEGINNT HIER ###
+
+anmeldung_long_differentiated <- anmeldung %>%
+  pivot_longer(
+    cols = ends_with("_Dauer_secs"), # Alle Dauer-Spalten
+    names_to = "Prozess",
+    values_to = "Dauer_Sekunden"
+  ) %>%
+  mutate(
+    # Kategorie hinzufügen, um zwischen "Gesamtdauer" und "Teilprozess" zu unterscheiden
+    Kategorie = ifelse(Prozess == "Anmeldung_Dauer_secs", "Gesamtdauer", "Teilprozess"),
+    # Prozessnamen bereinigen
+    Prozess = str_replace_all(Prozess, "_Dauer_secs", ""),
+    Prozess = str_replace_all(Prozess, "_", " ")
+  )
+
+ggplot(anmeldung_long_differentiated, aes(x = Prozess, y = Dauer_Sekunden, fill = Kategorie)) +
+  geom_boxplot(outlier.colour = "red", outlier.shape = "X") +
+  scale_y_log10(labels = scales::label_comma()) +
+  labs(
+    title = "Verteilung der Prozessdauern in der Anmeldung",
+    subtitle = "Vergleich von Teilprozessen und Gesamtdauer",
+    x = "Prozessschritt",
+    y = "Dauer in Sekunden",
+    fill = "Dauer-Typ" # Legendentitel
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+
+ggplot(anmeldung_long_differentiated, aes(x = Prozess, y = Dauer_Sekunden, fill = Kategorie)) +
+  geom_violin(trim = FALSE, alpha = 0.7) + # trim=FALSE zeigt die volle Dichte
+  geom_boxplot(width = 0.1, outlier.colour = "red", outlier.shape = 8) + # Boxplot als Overlay
+  #scale_y_log10(labels = scales::label_comma()) +
+  labs(
+    title = "Verteilung der Prozessdauern in der Anmeldung (Violin-Plot, Log-Skala)",
+    subtitle = "Dauer in Sekunden",
+    x = "Prozessschritt",
+    y = "Dauer in Sekunden (log Skala)",
+    fill = "Dauer-Typ"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5, face = "bold"),
+    plot.subtitle = element_text(hjust = 0.5)
+  )
+
+# Histogramm für Anmeldung_AX_Dauer_secs
+ggplot(anmeldung %>% filter(!is.na(Anmeldung_AX_Dauer_secs)), aes(x = Anmeldung_AX_Dauer_secs)) +
+  geom_histogram(binwidth = 10, fill = "lightblue", color = "black") + # Experimentiere mit binwidth
+  labs(
+    title = "Histogramm der Anmeldung_AX_Dauer",
+    x = "Dauer in Sekunden",
+    y = "Anzahl der Beobachtungen"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+# Dichtediagramm für Anmeldung_AX_Dauer_secs
+ggplot(anmeldung %>% filter(!is.na(Anmeldung_AX_Dauer_secs)), aes(x = Anmeldung_AX_Dauer_secs)) +
+  geom_density(fill = "lightblue", alpha = 0.7, color = "darkblue") +
+  labs(
+    title = "Dichteverteilung der Anmeldung_AX_Dauer",
+    x = "Dauer in Sekunden",
+    y = "Dichte"
+  ) +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5, face = "bold"))
+
+### NEUES ENDET HIER ###
+
 ##### Kann eigentlich weg #####
 ###  Unausagekräftige Plots
 
