@@ -42,7 +42,12 @@ create_specialized_dfs <- function(original_df) {
     "Fallakte_Start",
     "Fallakte_Stop",
     "Fallakte_Dauer",
-    "Kontakt_Anzahl_Anmeldung"
+    "Kontakt_Anzahl_Anmeldung",
+    "Anmeldung_AX_Dauer_secs",
+    "Anmeldung_Dauer_secs",
+    "Aufklärung_A2_Dauer_secs",
+    "Checkin_Dauer_secs",
+    "Fallakte_Dauer_secs"
   )
   columns_anmeldung <- c(base_columns_start, anmeldung_specific_columns, base_columns_end)
   Anmeldung <- original_df[, columns_anmeldung]
@@ -64,7 +69,10 @@ create_specialized_dfs <- function(original_df) {
     "Reporter_Befund_falsch",
     "Reporter_Befund_Umfang_zu_kurz",
     "Reporter_Befund_Umfang_zu_lang",
-    "Reporter_Befund_Umfang_angemessen"
+    "Reporter_Befund_Umfang_angemessen",
+    "Befundung_Dauer_secs",
+    "Befundung_mit_Reporter_B4_Dauer_secs",
+    "Befundung_ohne_Reporter_B3_Dauer_secs"
   )
   columns_befundung <- c(base_columns_start, befundung_specific_columns, base_columns_end)
   Befundung <- original_df[, columns_befundung]
@@ -87,7 +95,10 @@ create_specialized_dfs <- function(original_df) {
     "OPRA_Anamese_Umfang_zu_kurz",
     "OPRA_Anamese_Umfang_zu_lang",
     "OPRA_Anamese_Umfang_angemessen",
-    "OPRA_Anamese_Kommentar"
+    "OPRA_Anamese_Kommentar",
+    "Klinik_mit_Arztgespräch_B1_Dauer_secs",
+    "Klinik_ohne_Arztgespräch_B1_Dauer_secs",
+    "Arztgespräch_Dauer_secs"
   )
   columns_klinik <- c(base_columns_start, klinik_specific_columns, base_columns_end)
   Klinik <- original_df[, columns_klinik]
