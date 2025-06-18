@@ -14,6 +14,7 @@ library(tidyr)
 # eigene Funktionen laden
 source("create_specialized_dfs_function.R")
 source("create_descriptive_summary_function.R")
+source("create_wide_table_function.R")
 
 # Daten einlesen
 df <- read_xlsx("Daten/OPRA Forschungsprojekt 16.04.2025.xlsx")
@@ -70,6 +71,11 @@ klinik <- list_of_dfs$Klinik
 anmeldung_descriptive <- create_descriptive_summary(anmeldung)
 befundung_descriptive <- create_descriptive_summary(befundung)
 klinik_descriptive <- create_descriptive_summary(klinik)
+
+# Tabellen im Wide-Format erzeugen
+anmeldung_descriptive_wide <- create_wide_table(anmeldung_descriptive)
+befundung_descriptive_wide <- create_wide_table(befundung_descriptive)
+klinik_descriptive_wide <- create_wide_table(klinik_descriptive)
 
 ### NEUES BEGINNT HIER ###
 
@@ -222,4 +228,3 @@ plot(anmeldung$Kontakt_Anzahl_Anmeldung,
 abline(lm(Anmeldung_AX_Dauer ~ Kontakt_Anzahl_Anmeldung, data = anmeldung), col = "orange", lwd=2)
 
 ## als nächstes ausreißer identifizieren (vlt. mit Hilfe von dem Buch von Warnat "Saur...")
-## die neue funktion ist noch nicht funktionsfähig
