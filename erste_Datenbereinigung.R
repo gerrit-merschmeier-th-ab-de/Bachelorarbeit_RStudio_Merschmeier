@@ -93,6 +93,7 @@ anmeldung_long_differentiated <- anmeldung %>%
     Prozess = str_replace_all(Prozess, "_", " ")
   )
 
+library(ggplot2)
 ggplot(anmeldung_long_differentiated, aes(x = Prozess, y = Dauer_Sekunden, fill = Kategorie)) +
   geom_boxplot(outlier.colour = "red", outlier.shape = "X") +
   scale_y_log10(labels = scales::label_comma()) +
@@ -152,31 +153,16 @@ ggplot(anmeldung %>% filter(!is.na(Anmeldung_AX_Dauer_secs)), aes(x = Anmeldung_
 
 ### NEUES ENDET HIER ###
 
-##### Kann eigentlich weg #####
-###  Unausagekräftige Plots
-
-# Boxplot nach Prüfverfahren
-boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren,
-        data = anmeldung,
-        main = "Anmeldedauer nach Prüfverfahren",
-        xlab = "Prüfverfahren",
-        ylab = "Dauer in Sekunden",
-        col = "lightgreen")
-
+##### Nur eventuell sinnvoll #####
+###  Unausagekräftige Plots da Daten unvollständig
 
 # Zusammenhang Anmeldedauer und Kontaktanzahl
 plot(anmeldung$Kontakt_Anzahl_Anmeldung,
-     hms::as_hms(anmeldung$Anmeldung_AX_Dauer), # hms-Paket für Zeitkomponenten ohne Datum; evtl. Achsenskalierung ändern
+     hms::as_hms(anmeldung$Anmeldung_Dauer_secs), # hms-Paket für Zeitkomponenten ohne Datum; evtl. Achsenskalierung ändern
      main = "Zusammenhang Kontaktanzahl und Dauer",
      xlab = "Anzahl Kontakte",
      ylab = "Anmeldedauer (Sekunden)",
      pch = 19, col = "steelblue")
-
-
-summary(anmeldung$Anmeldung_AX_Dauer)
-summary(anmeldung$Checkin_Dauer)
-summary(anmeldung$Fallakte_Dauer)
-summary(anmeldung$Kontakt_Anzahl_Anmeldung)
 
 # Mittelwert pro Prüfverfahren
 aggregate(Anmeldung_AX_Dauer ~ Prüfverfahren, data = anmeldung, FUN = mean, na.rm = TRUE)
@@ -189,24 +175,12 @@ aggregate(Kontakt_Anzahl_Anmeldung ~ Prüfverfahren, data = anmeldung, FUN = mea
 hist(anmeldung$Anmeldung_AX_Dauer, main = "Anmeldedauer", xlab = "Sekunden", col = "lightblue", breaks = 'secs')
 
 # Boxplots nach Prüfverfahren
-boxplot(Anmeldung_AX_Dauer ~ Prüfverfahren, data = anmeldung,
+boxplot(Anmeldung_Dauer_secs ~ Prüfverfahren, data = anmeldung,
         main = "Anmeldedauer nach Prüfverfahren",
         ylab = "Dauer in Sekunden", col = "lightgreen")
 
 # Mittlere Dauer je Modalität
 aggregate(Anmeldung_AX_Dauer ~ Modalität, data = anmeldung, FUN = mean, na.rm = TRUE)
-
-
-statistics_Anmeldung_Dauer <- anmeldung %>%
-  group_by(Prüfverfahren) %>%
-  summarise(
-    n = n(),
-    mean_Anmeldung = mean(Anmeldung_AX_Dauer, na.rm = TRUE),
-    median_Anmeldung = median(Anmeldung_AX_Dauer, na.rm = TRUE),
-    sd_Anmeldung = sd(Anmeldung_AX_Dauer, na.rm = TRUE),
-    mean_Checkin = mean(Checkin_Dauer, na.rm = TRUE),
-    mean_Kontakte = mean(Kontakt_Anzahl_Anmeldung, na.rm = TRUE)
-  )
 
 
 ###### Statistische Tests mit P-Wert (Signifikanz usw.) #####
